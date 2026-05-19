@@ -706,7 +706,7 @@ function exportPDF() {
   // Group by cat
   var cats = {}; var catOrder = [];
   for (var i = 0; i < entries.length; i++) {
-    var key = entries[i].icon + ' ' + entries[i].cat;
+    var key = entries[i].cat;
     if (!cats[key]) { cats[key] = []; catOrder.push(key); }
     cats[key].push(entries[i]);
   }
