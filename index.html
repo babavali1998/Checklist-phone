@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>iFixandRepair – Order Checklist</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:linear-gradient(135deg,#0f1728,#1a2744);min-height:100vh;color:#e8ecf4;}
+    .header{background:linear-gradient(90deg,#2563eb,#1e40af);padding:16px 20px;border-bottom:2px solid #3b82f6;}
+    .header h1{font-size:20px;font-weight:800;color:#fff;}
+    .header p{font-size:12px;color:#93c5fd;margin-top:2px;}
+    .body{padding:16px 16px 120px;}
+    input,select{padding:10px 12px;border-radius:10px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;font-size:14px;outline:none;width:100%;-webkit-appearance:none;}
+    select option{background:#1e293b;}
+    .row{display:flex;gap:10px;margin-bottom:14px;}
+    .row input,.row select{width:auto;flex:1;}
+    .cat-title{font-size:13px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+    .cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
+    .cat-tile{background:#1e293b;border:2px solid #334155;border-radius:14px;padding:16px 10px;text-align:center;cursor:pointer;transition:all .15s;}
+    .cat-tile:active{transform:scale(.97);}
+    .cat-tile .icon{font-size:26px;margin-bottom:5px;}
+    .cat-tile .name{font-size:13px;font-weight:700;color:#e2e8f0;}
+    .cat-tile .sub{font-size:10px;color:#64748b;margin-top:2px;}
+    .section-card{background:#1e293b;border-radius:14px;border:1px solid #334155;padding:14px;margin-bottom:14px;}
+    .slabel{font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+    .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+    .sel-all-btn{padding:4px 12px;border-radius:6px;border:1px solid #475569;background:transparent;color:#94a3b8;font-size:11px;font-weight:600;cursor:pointer;}
+    .search-wrap{position:relative;margin-bottom:8px;}
+    .search-wrap input{padding:10px 12px 10px 36px;border:2px solid #3b82f6;background:#0f172a;}
+    .search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#64748b;pointer-events:none;}
+    .model-list{max-height:180px;overflow-y:auto;border:1px solid #334155;border-radius:10px;background:#0f172a;margin-bottom:10px;}
+    .model-item{padding:10px 14px;font-size:13px;color:#94a3b8;cursor:pointer;border-bottom:1px solid #1e293b;}
+    .model-item:last-child{border-bottom:none;}
+    .model-item:active,.model-item.sel{background:#1e3a5f;color:#93c5fd;font-weight:600;}
+    .model-item.hide{display:none;}
+    .selected-tag{display:inline-flex;align-items:center;gap:6px;background:#1e3a5f;border:1px solid #3b82f6;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:600;color:#93c5fd;margin-bottom:10px;}
+    .tag-x{cursor:pointer;color:#64748b;font-size:18px;line-height:1;}
+    .cb-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+    .case-item{display:flex;align-items:center;gap:8px;padding:10px;border-radius:8px;background:#0f172a;border:1.5px solid #1e293b;cursor:pointer;user-select:none;}
+    .case-item.on{background:#1e3a5f;border-color:#3b82f6;}
+    .case-item.hide{display:none;}
+    .cb-box{width:22px;height:22px;border-radius:5px;border:2px solid #475569;background:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .cb-box.on{border-color:#3b82f6;background:#2563eb;}
+    .cb-label{font-size:12px;color:#94a3b8;line-height:1.2;}
+    .cb-label.on{color:#93c5fd;font-weight:600;}
+    .ptype-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:7px;margin-bottom:10px;}
+    .ptype-btn{padding:10px 4px;border-radius:10px;border:2px solid #334155;background:#0f172a;color:#94a3b8;font-size:11px;font-weight:700;cursor:pointer;text-align:center;}
+    .ptype-btn.on{border-color:#3b82f6;background:#1e3a5f;color:#93c5fd;}
+    .qty-row{display:flex;align-items:center;gap:10px;background:#0f172a;border-radius:10px;padding:10px 12px;margin-top:8px;}
+    .qty-label{flex:1;font-size:12px;color:#94a3b8;}
+    .qty-ctrl{display:flex;align-items:center;gap:8px;}
+    .qty-btn{width:30px;height:30px;border-radius:8px;border:1px solid #475569;background:#1e293b;color:#e2e8f0;font-size:18px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+    .qty-val{font-size:16px;font-weight:700;color:#e2e8f0;min-width:24px;text-align:center;}
+    .add-btn{width:100%;margin-top:12px;padding:13px;border-radius:10px;border:none;background:#334155;color:#64748b;font-size:14px;font-weight:700;cursor:default;}
+    .add-btn.on{background:linear-gradient(90deg,#2563eb,#1d4ed8);color:#fff;cursor:pointer;}
+    .back-btn{padding:6px 14px;border-radius:8px;border:1px solid #475569;background:transparent;color:#94a3b8;font-size:12px;font-weight:600;cursor:pointer;margin-bottom:14px;}
+    .entry-card{background:#1e293b;border-radius:10px;border:1px solid #334155;padding:10px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:flex-start;}
+    .entry-cat{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;}
+    .entry-model{font-size:14px;font-weight:700;color:#e2e8f0;}
+    .entry-detail{font-size:11px;color:#64748b;margin-top:3px;line-height:1.4;}
+    .rm-btn{background:#991b1b;border:none;color:#fca5a5;font-size:13px;cursor:pointer;padding:2px 8px;border-radius:6px;font-weight:700;margin-left:8px;flex-shrink:0;}
+    .done-box{background:linear-gradient(135deg,#0c4a1e,#14532d);border-radius:14px;border:2px solid #22c55e;padding:18px;margin-top:16px;text-align:center;}
+    .done-box h3{font-size:15px;color:#86efac;font-weight:700;margin-bottom:4px;}
+    .done-box p{font-size:12px;color:#4ade80;margin-bottom:14px;}
+    .export-btn{width:100%;padding:15px;border-radius:12px;border:none;background:linear-gradient(90deg,#16a34a,#15803d);color:#fff;font-size:16px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;}
+    .section-title{font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;margin-top:4px;}
+    .subsec-title{font-size:12px;font-weight:700;color:#f59e0b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+    .empty{text-align:center;padding:50px 20px;color:#475569;}
+    .empty .icon{font-size:44px;margin-bottom:12px;}
+    .toast{position:fixed;top:18px;left:50%;transform:translateX(-50%);background:#059669;color:#fff;padding:10px 24px;border-radius:10px;font-size:13px;font-weight:700;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.5);display:none;white-space:nowrap;}
+    .hidden{display:none!important;}
+    .divider{height:1px;background:#334155;margin:12px 0;}
+  </style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+<div class="header"><h1>iFixandRepair</h1><p>Order Checklist</p></div>
+<div class="body">
+
+  <div id="step1">
+    <div class="row">
+      <select id="store">
+        <option value="">Store...</option>
+        <option>Diberville</option><option>Rangeline</option>
+        <option>Pascagoula</option><option>Ocean Springs</option><option>Montclair</option>
+      </select>
+      <input type="text" id="employee" placeholder="Your name"/>
+    </div>
+    <div class="cat-title">What do you need to order?</div>
+    <div class="cat-grid">
+      <div class="cat-tile" onclick="selectCat('cases')"><div class="icon">📱</div><div class="name">Cases</div><div class="sub">Phone cases</div></div>
+      <div class="cat-tile" onclick="selectCat('protectors')"><div class="icon">🛡️</div><div class="name">Protectors</div><div class="sub">Screen, Camera TG</div></div>
+      <div class="cat-tile" onclick="selectCat('chargers')"><div class="icon">🔌</div><div class="name">Chargers</div><div class="sub">Cables & blocks</div></div>
+      <div class="cat-tile" onclick="selectCat('accessories')"><div class="icon">🎧</div><div class="name">Accessories</div><div class="sub">AirPods, iPad, holders</div></div>
+    </div>
+  </div>
+
+  <!-- CASES -->
+  <div id="sec-cases" class="hidden">
+    <button class="back-btn" onclick="goBack()">← Back</button>
+    <div class="section-card">
+      <div class="search-wrap">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="caseSearch" placeholder="Search phone model…" oninput="filterList('case')" autocomplete="off"/>
+      </div>
+      <div class="model-list" id="caseModelList"></div>
+      <div id="caseTag" class="hidden"></div>
+      <div id="caseCbArea" class="hidden">
+        <div class="divider"></div>
+        <div class="top">
+          <span class="slabel" id="caseLbl">Cases needed</span>
+          <button class="sel-all-btn" onclick="caseSelectAll()">Check All</button>
+        </div>
+        <div class="cb-grid" id="caseCbGrid"></div>
+        <button class="add-btn" id="caseAddBtn" onclick="addCase()">+ Add</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROTECTORS -->
+  <div id="sec-protectors" class="hidden">
+    <button class="back-btn" onclick="goBack()">← Back</button>
+    <div class="section-card">
+      <div class="search-wrap">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="protSearch" placeholder="Search phone model…" oninput="filterList('prot')" autocomplete="off"/>
+      </div>
+      <div class="model-list" id="protModelList"></div>
+      <div id="protTag" class="hidden"></div>
+      <div id="protArea" class="hidden">
+        <div class="divider"></div>
+        <div class="slabel" style="margin-bottom:8px;" id="protLbl"></div>
+        <div class="ptype-grid">
+          <div class="ptype-btn" id="pt-clear"   onclick="toggleProt('clear')">☀️<br>Clear</div>
+          <div class="ptype-btn" id="pt-privacy" onclick="toggleProt('privacy')">🔒<br>Privacy</div>
+          <div class="ptype-btn" id="pt-matte"   onclick="toggleProt('matte')">🌫️<br>Matte</div>
+          <div class="ptype-btn" id="pt-camera"  onclick="toggleProt('camera')">📷<br>Camera</div>
+        </div>
+        <div class="qty-row">
+          <span class="qty-label" id="protQtyLbl">Select type above</span>
+          <div class="qty-ctrl">
+            <button class="qty-btn" onclick="adj('prot',-1)">−</button>
+            <span class="qty-val" id="protQty">1</span>
+            <button class="qty-btn" onclick="adj('prot',1)">+</button>
+          </div>
+        </div>
+        <button class="add-btn" id="protAddBtn" onclick="addProt()">+ Add protector</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARGERS -->
+  <div id="sec-chargers" class="hidden">
+    <button class="back-btn" onclick="goBack()">← Back</button>
+    <div class="section-card">
+      <div class="search-wrap">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="chargerSearch" placeholder="Search charger type…" oninput="filterCb('charger')" autocomplete="off"/>
+      </div>
+      <div class="top"><span class="slabel">Select Charger Types</span>
+        <button class="sel-all-btn" onclick="selAll('charger')">Check All</button>
+      </div>
+      <div class="cb-grid" id="chargerGrid"></div>
+      <div class="qty-row" style="margin-top:10px;">
+        <span class="qty-label">Qty per type</span>
+        <div class="qty-ctrl">
+          <button class="qty-btn" onclick="adj('charger',-1)">−</button>
+          <span class="qty-val" id="chargerQty">10</span>
+          <button class="qty-btn" onclick="adj('charger',1)">+</button>
+        </div>
+      </div>
+      <button class="add-btn" id="chargerAddBtn" onclick="addCharger()">+ Add chargers</button>
+    </div>
+  </div>
+
+  <!-- ACCESSORIES -->
+  <div id="sec-accessories" class="hidden">
+    <button class="back-btn" onclick="goBack()">← Back</button>
+    <div class="section-card" style="margin-bottom:10px;">
+      <div class="subsec-title">🎧 AirPods Cases</div>
+      <div class="search-wrap">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="airpodsSearch" placeholder="Search…" oninput="filterCb('airpods')" autocomplete="off"/>
+      </div>
+      <div class="cb-grid" id="airpodsGrid"></div>
+      <div class="qty-row" style="margin-top:10px;">
+        <span class="qty-label">Qty per type</span>
+        <div class="qty-ctrl">
+          <button class="qty-btn" onclick="adj('airpods',-1)">−</button>
+          <span class="qty-val" id="airpodsQty">5</span>
+          <button class="qty-btn" onclick="adj('airpods',1)">+</button>
+        </div>
+      </div>
+      <button class="add-btn" id="airpodsAddBtn" onclick="addAcc('airpods')">+ Add AirPods</button>
+    </div>
+    <div class="section-card" style="margin-bottom:10px;">
+      <div class="subsec-title">📟 iPad Cases</div>
+      <div class="search-wrap">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="ipadSearch" placeholder="Search iPad model…" oninput="filterCb('ipad')" autocomplete="off"/>
+      </div>
+      <div class="cb-grid" id="ipadGrid"></div>
+      <div class="qty-row" style="margin-top:10px;">
+        <span class="qty-label">Qty each model</span>
+        <div class="qty-ctrl">
+          <button class="qty-btn" onclick="adj('ipad',-1)">−</button>
+          <span class="qty-val" id="ipadQty">10</span>
+          <button class="qty-btn" onclick="adj('ipad',1)">+</button>
+        </div>
+      </div>
+      <button class="add-btn" id="ipadAddBtn" onclick="addAcc('ipad')">+ Add iPad Cases</button>
+    </div>
+    <div class="section-card">
+      <div class="subsec-title">🚗 Car Phone Holders</div>
+      <div class="search-wrap">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="holderSearch" placeholder="Search holder type…" oninput="filterCb('holder')" autocomplete="off"/>
+      </div>
+      <div class="cb-grid" id="holderGrid"></div>
+      <div class="qty-row" style="margin-top:10px;">
+        <span class="qty-label">Qty per type</span>
+        <div class="qty-ctrl">
+          <button class="qty-btn" onclick="adj('holder',-1)">−</button>
+          <span class="qty-val" id="holderQty">5</span>
+          <button class="qty-btn" onclick="adj('holder',1)">+</button>
+        </div>
+      </div>
+      <button class="add-btn" id="holderAddBtn" onclick="addAcc('holder')">+ Add Car Holders</button>
+    </div>
+  </div>
+
+  <!-- ENTRY LIST -->
+  <div id="entrySection" class="hidden" style="margin-top:6px;">
+    <div class="section-title" id="entryTitle">Order List</div>
+    <div id="entryList"></div>
+    <div class="done-box">
+      <h3>Order complete?</h3>
+      <p>Export PDF — saves directly to your phone</p>
+      <button class="export-btn" onclick="exportPDF()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
+        Export PDF
+      </button>
+    </div>
+  </div>
+
+  <div class="empty" id="emptyState">
+    <div class="icon">📋</div>
+    <h3 style="color:#64748b;">Select a category above</h3>
+    <p>Fill in what you need then export PDF to manager</p>
+  </div>
+</div>
+
+<script>
+var PHONES=[
+  "iPhone 6","iPhone 6 Plus","iPhone 6s","iPhone 6s Plus",
+  "iPhone 7","iPhone 7 Plus","iPhone 8","iPhone 8 Plus",
+  "iPhone SE (1st Gen)","iPhone SE (2nd Gen)","iPhone SE (3rd Gen)",
+  "iPhone X","iPhone XS","iPhone XS Max","iPhone XR",
+  "iPhone 11","iPhone 11 Pro","iPhone 11 Pro Max",
+  "iPhone 12","iPhone 12 Mini","iPhone 12 Pro","iPhone 12 Pro Max",
+  "iPhone 13","iPhone 13 Mini","iPhone 13 Pro","iPhone 13 Pro Max",
+  "iPhone 14","iPhone 14 Plus","iPhone 14 Pro","iPhone 14 Pro Max",
+  "iPhone 15","iPhone 15 Plus","iPhone 15 Pro","iPhone 15 Pro Max",
+  "iPhone 16","iPhone 16 Plus","iPhone 16 Pro","iPhone 16 Pro Max","iPhone 16e",
+  "iPhone 17","iPhone 17 Air","iPhone 17 Pro","iPhone 17 Pro Max",
+  "Samsung S6","Samsung S6 Edge","Samsung S7","Samsung S7 Edge",
+  "Samsung S8","Samsung S8 Plus","Samsung S9","Samsung S9 Plus",
+  "Samsung S10","Samsung S10 Plus","Samsung S10e","Samsung S10 5G",
+  "Samsung S20","Samsung S20 Plus","Samsung S20 Ultra","Samsung S20 FE",
+  "Samsung S21","Samsung S21 Plus","Samsung S21 Ultra","Samsung S21 FE",
+  "Samsung S22","Samsung S22 Plus","Samsung S22 Ultra",
+  "Samsung S23","Samsung S23 Plus","Samsung S23 Ultra","Samsung S23 FE",
+  "Samsung S24","Samsung S24 Plus","Samsung S24 Ultra","Samsung S24 FE",
+  "Samsung S25","Samsung S25 Plus","Samsung S25 Ultra","Samsung S25 FE",
+  "Samsung S26","Samsung S26 Plus","Samsung S26 Ultra",
+  "Samsung A03","Samsung A03s","Samsung A04","Samsung A04s",
+  "Samsung A10","Samsung A10s","Samsung A11","Samsung A12",
+  "Samsung A13","Samsung A13 5G","Samsung A14","Samsung A14 5G",
+  "Samsung A15","Samsung A15 5G","Samsung A16","Samsung A16 5G",
+  "Samsung A17","Samsung A20","Samsung A21","Samsung A21s",
+  "Samsung A22","Samsung A22 5G","Samsung A23","Samsung A24",
+  "Samsung A25","Samsung A26","Samsung A32","Samsung A32 5G",
+  "Samsung A33","Samsung A34","Samsung A35","Samsung A36",
+  "Samsung A42","Samsung A50","Samsung A51","Samsung A52",
+  "Samsung A53","Samsung A54","Samsung A55","Samsung A56",
+  "Samsung A71","Samsung A72","Samsung A73",
+  "Samsung Note 8","Samsung Note 9","Samsung Note 10","Samsung Note 10 Plus",
+  "Samsung Note 20","Samsung Note 20 Ultra",
+  "Samsung Fold 2","Samsung Fold 3","Samsung Fold 4","Samsung Fold 5","Samsung Fold 6","Samsung Fold 7",
+  "Samsung Flip 3","Samsung Flip 4","Samsung Flip 5","Samsung Flip 6","Samsung Flip 7 SE",
+  "Moto G Play 2021","Moto G Play 2023","Moto G Play 2024",
+  "Moto G Stylus 2021","Moto G Stylus 2022","Moto G Stylus 2023","Moto G Stylus 2024","Moto G Stylus 2025",
+  "Moto G Power 2021","Moto G Power 2022","Moto G Power 2023","Moto G Power 2024","Moto G Power 2025",
+  "Moto G 5G 2022","Moto G 5G 2023","Moto G 5G 2024","Moto G 5G 2025","Moto G 5G 2026",
+  "Moto Edge 2021","Moto Edge 2022","Moto Edge 2023","Moto Edge 2024","Moto Edge 2025",
+  "Moto Edge Plus 2023","Moto Edge Plus 2024",
+  "Moto Razr 2022","Moto Razr 2023","Moto Razr 2024",
+  "Moto Razr+ 2023","Moto Razr+ 2024","Moto 2026 (All)",
+  "Pixel 4","Pixel 4 XL","Pixel 4a","Pixel 4a 5G",
+  "Pixel 5","Pixel 5a","Pixel 6","Pixel 6 Pro","Pixel 6a",
+  "Pixel 7","Pixel 7 Pro","Pixel 7a","Pixel 8","Pixel 8 Pro","Pixel 8a",
+  "Pixel 9","Pixel 9 Pro","Pixel 9 Pro XL","Pixel 9 Pro Fold","Pixel 9A",
+  "Pixel 10","Pixel 10 Pro","Pixel 10 Pro XL"
+];
+
+var CASES=[
+  "Otter/Rugged","OtterBox Camo","OtterBox Flag",
+  "Wallet/Flip","Mag Leather Flip","Men Wallet",
+  "Butterfly","Diamond/Bling","Diamond MagSafe",
+  "MagSafe Ring","MagSafe Stand","Hard Hidden Ring",
+  "Shutter","Waterproof","Defender w/ Clip",
+  "Glitter MagSafe","Floating Glitter","Ice Crystal",
+  "Hard Handle","Puffed Case","Cat Ear & Tail","Eagle Glasses"
+];
+
+var CHARGERS=[
+  "USB-C to C (1m)","USB-C to C (2m)","USB-A to C (1m)",
+  "USB-A to Lightning (1m)","C to Lightning (1m)",
+  "USB-C Adapter Block","USB-A Block (single)","USB-A Block (dual)",
+  "65W Multi-port Block","100W Multi-port Block",
+  "Wireless Charger (5W)","Wireless Charger (15W)",
+  "MagSafe Charger","MagSafe Duo",
+  "Car Charger (single)","Car Charger (dual)",
+  "4-Pin Adapter (C+USB)","Solar Charger"
+];
+
+var AIRPODS=[
+  "AirPods 1st Gen Case","AirPods 2nd Gen Case","AirPods 3rd Gen Case",
+  "AirPods Pro 1 Case","AirPods Pro 2 Case","AirPods Max Case",
+  "Galaxy Buds Case","Galaxy Buds 2 Case",
+  "Galaxy Buds Pro Case","Galaxy Buds 2 Pro Case",
+  "Pixel Buds Case","Universal Earbud Case"
+];
+
+var IPADS=[
+  "iPad Mini 4","iPad Mini 5","iPad Mini 6",
+  "iPad 5th Gen","iPad 6th Gen","iPad 7th Gen","iPad 8th Gen","iPad 9th Gen","iPad 10th Gen",
+  "iPad Air 3","iPad Air 4","iPad Air 5","iPad Air M2","iPad Air M3",
+  "iPad Pro 9.7\"","iPad Pro 10.5\"",
+  "iPad Pro 11\" (1st)","iPad Pro 11\" (2nd)","iPad Pro 11\" (3rd)","iPad Pro 11\" M4",
+  "iPad Pro 12.9\" (3rd)","iPad Pro 12.9\" (4th)","iPad Pro 12.9\" (5th)","iPad Pro 12.9\" (6th)","iPad Pro 13\" M4"
+];
+
+var HOLDERS=[
+  "Vent Clip (universal)","Vent Clip (MagSafe)","Vent Clip (360 deg)",
+  "Dashboard Suction Cup","Windshield Suction Cup",
+  "CD Slot Mount","Wireless Charging Vent Mount",
+  "Gooseneck (flexible)","Headrest Mount","Truck/Heavy Duty Mount"
+];
+
+// State — use plain objects, never reassign them
+var entries = [];
+var caseChecked = {};   // key=index, val=true/false
+var chargerChecked = {};
+var airpodsChecked = {};
+var ipadChecked = {};
+var holderChecked = {};
+var protSelected = {};  // key=type string, val=true/false
+var qtys = {prot:1, charger:10, airpods:5, ipad:10, holder:5};
+var caseModel = '';
+var protModel = '';
+
+// ── BUILD LISTS ──────────────────────────────────────────────────────────────
+function buildModelList(listId, type) {
+  var ul = document.getElementById(listId);
+  for (var i = 0; i < PHONES.length; i++) {
+    (function(m) {
+      var d = document.createElement('div');
+      d.className = 'model-item';
+      d.textContent = m;
+      d.onclick = function() { pickModel(type, m); };
+      ul.appendChild(d);
+    })(PHONES[i]);
+  }
+}
+
+function buildCbGrid(gridId, items, checkedObj, prefix, updateFn) {
+  var grid = document.getElementById(gridId);
+  for (var i = 0; i < items.length; i++) {
+    (function(idx, label) {
+      var div = document.createElement('div');
+      div.className = 'case-item';
+      div.id = prefix + '_i' + idx;
+      div.innerHTML = '<div class="cb-box" id="' + prefix + '_b' + idx + '"></div>'
+                    + '<span class="cb-label" id="' + prefix + '_l' + idx + '">' + label + '</span>';
+      div.onclick = function() {
+        checkedObj[idx] = !checkedObj[idx];
+        paintCb(prefix, idx, checkedObj[idx]);
+        updateFn();
+      };
+      grid.appendChild(div);
+    })(i, items[i]);
+  }
+}
+
+function paintCb(prefix, idx, on) {
+  var item = document.getElementById(prefix + '_i' + idx);
+  var box  = document.getElementById(prefix + '_b' + idx);
+  var lbl  = document.getElementById(prefix + '_l' + idx);
+  item.className = 'case-item' + (on ? ' on' : '');
+  box.className  = 'cb-box'   + (on ? ' on' : '');
+  box.innerHTML  = on ? '<svg width="13" height="13" viewBox="0 0 12 12" fill="none"><path d="M2 6L5 9L10 3" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
+  lbl.className  = 'cb-label' + (on ? ' on' : '');
+}
+
+function clearCbObj(obj, items, prefix) {
+  for (var i = 0; i < items.length; i++) {
+    obj[i] = false;
+    paintCb(prefix, i, false);
+  }
+}
+
+(function init() {
+  buildModelList('caseModelList', 'case');
+  buildModelList('protModelList', 'prot');
+  buildCbGrid('caseCbGrid',   CASES,    caseChecked,    'case',    updateCaseBtn);
+  buildCbGrid('chargerGrid',  CHARGERS, chargerChecked, 'charger', updateChargerBtn);
+  buildCbGrid('airpodsGrid',  AIRPODS,  airpodsChecked, 'airpods', function(){ updateAccBtn('airpods'); });
+  buildCbGrid('ipadGrid',     IPADS,    ipadChecked,    'ipad',    function(){ updateAccBtn('ipad'); });
+  buildCbGrid('holderGrid',   HOLDERS,  holderChecked,  'holder',  function(){ updateAccBtn('holder'); });
+})();
+
+// ── NAVIGATION ───────────────────────────────────────────────────────────────
+function selectCat(cat) {
+  var cats = ['cases','protectors','chargers','accessories'];
+  for (var i = 0; i < cats.length; i++) {
+    document.getElementById('sec-' + cats[i]).classList.toggle('hidden', cats[i] !== cat);
+  }
+  document.getElementById('emptyState').classList.add('hidden');
+  window.scrollTo({top: 120, behavior: 'smooth'});
+}
+function goBack() {
+  var cats = ['cases','protectors','chargers','accessories'];
+  for (var i = 0; i < cats.length; i++) document.getElementById('sec-' + cats[i]).classList.add('hidden');
+  if (entries.length === 0) document.getElementById('emptyState').classList.remove('hidden');
+}
+
+// ── SEARCH ───────────────────────────────────────────────────────────────────
+function filterList(type) {
+  var q = document.getElementById(type + 'Search').value.toLowerCase();
+  var items = document.getElementById(type + 'ModelList').querySelectorAll('.model-item');
+  for (var i = 0; i < items.length; i++) {
+    items[i].classList.toggle('hide', q !== '' && items[i].textContent.toLowerCase().indexOf(q) === -1);
+  }
+}
+function filterCb(prefix) {
+  var q = document.getElementById(prefix + 'Search').value.toLowerCase();
+  var itemsMap = {charger: CHARGERS, airpods: AIRPODS, ipad: IPADS, holder: HOLDERS};
+  var arr = itemsMap[prefix];
+  for (var i = 0; i < arr.length; i++) {
+    var el = document.getElementById(prefix + '_i' + i);
+    if (el) el.classList.toggle('hide', q !== '' && arr[i].toLowerCase().indexOf(q) === -1);
+  }
+}
+
+// ── MODEL PICK ───────────────────────────────────────────────────────────────
+function pickModel(type, model) {
+  // Highlight row
+  var list = document.getElementById(type + 'ModelList').querySelectorAll('.model-item');
+  for (var i = 0; i < list.length; i++) list[i].classList.remove('sel');
+  event.currentTarget.classList.add('sel');
+
+  if (type === 'case') {
+    caseModel = model;
+    var tag = document.getElementById('caseTag');
+    tag.className = 'selected-tag';
+    tag.innerHTML = model + ' <span class="tag-x" onclick="clearCase()">&#215;</span>';
+    document.getElementById('caseCbArea').classList.remove('hidden');
+    document.getElementById('caseLbl').textContent = 'Cases for ' + model;
+    updateCaseBtn();
+  } else {
+    protModel = model;
+    var ptag = document.getElementById('protTag');
+    ptag.className = 'selected-tag';
+    ptag.innerHTML = model + ' <span class="tag-x" onclick="clearProt()">&#215;</span>';
+    document.getElementById('protArea').classList.remove('hidden');
+    document.getElementById('protLbl').textContent = model;
+    var ptypes = ['clear','privacy','matte','camera'];
+    for (var j = 0; j < ptypes.length; j++) {
+      protSelected[ptypes[j]] = false;
+      document.getElementById('pt-' + ptypes[j]).classList.remove('on');
+    }
+    document.getElementById('protQtyLbl').textContent = 'Select type above';
+    updateProtBtn();
+  }
+}
+
+function clearCase() {
+  caseModel = '';
+  document.getElementById('caseTag').className = 'hidden';
+  document.getElementById('caseCbArea').classList.add('hidden');
+  document.getElementById('caseSearch').value = '';
+  clearCbObj(caseChecked, CASES, 'case');
+  var rows = document.getElementById('caseModelList').querySelectorAll('.model-item');
+  for (var i = 0; i < rows.length; i++) rows[i].classList.remove('sel', 'hide');
+  updateCaseBtn();
+}
+
+function clearProt() {
+  protModel = '';
+  document.getElementById('protTag').className = 'hidden';
+  document.getElementById('protArea').classList.add('hidden');
+  document.getElementById('protSearch').value = '';
+  var rows = document.getElementById('protModelList').querySelectorAll('.model-item');
+  for (var i = 0; i < rows.length; i++) rows[i].classList.remove('sel', 'hide');
+  updateProtBtn();
+}
+
+// ── CASES ────────────────────────────────────────────────────────────────────
+function caseSelectAll() {
+  var allOn = true;
+  for (var i = 0; i < CASES.length; i++) { if (!caseChecked[i]) { allOn = false; break; } }
+  for (var i = 0; i < CASES.length; i++) { caseChecked[i] = !allOn; paintCb('case', i, !allOn); }
+  document.querySelector('#sec-cases .sel-all-btn').textContent = allOn ? 'Check All' : 'Uncheck All';
+  updateCaseBtn();
+}
+
+function updateCaseBtn() {
+  var count = 0;
+  for (var i = 0; i < CASES.length; i++) { if (caseChecked[i]) count++; }
+  var btn = document.getElementById('caseAddBtn');
+  if (count > 0 && caseModel) {
+    btn.className = 'add-btn on';
+    btn.textContent = '+ Add ' + caseModel + ' (' + count + ' case' + (count !== 1 ? 's' : '') + ')';
+  } else {
+    btn.className = 'add-btn';
+    btn.textContent = '+ Add (select model & cases)';
+  }
+}
+
+function addCase() {
+  if (!caseModel) return;
+  var cases = [];
+  for (var i = 0; i < CASES.length; i++) { if (caseChecked[i]) cases.push(CASES[i]); }
+  if (cases.length === 0) return;
+  var m = caseModel;
+  entries.push({cat: 'Cases', icon: '📱', model: m, detail: cases.join(', '), qty: ''});
+  clearCase();
+  renderEntries();
+  flash('Added ' + m);
+}
+
+// ── PROTECTORS ───────────────────────────────────────────────────────────────
+function toggleProt(t) {
+  protSelected[t] = !protSelected[t];
+  document.getElementById('pt-' + t).classList.toggle('on', protSelected[t]);
+  var sel = [];
+  var types = ['clear','privacy','matte','camera'];
+  for (var i = 0; i < types.length; i++) { if (protSelected[types[i]]) sel.push(types[i][0].toUpperCase() + types[i].slice(1)); }
+  document.getElementById('protQtyLbl').textContent = sel.length ? sel.join(' + ') : 'Select type above';
+  updateProtBtn();
+}
+
+function updateProtBtn() {
+  var hasType = false;
+  var types = ['clear','privacy','matte','camera'];
+  for (var i = 0; i < types.length; i++) { if (protSelected[types[i]]) { hasType = true; break; } }
+  var btn = document.getElementById('protAddBtn');
+  if (protModel && hasType) {
+    btn.className = 'add-btn on';
+    btn.textContent = '+ Add ' + protModel + ' protector(s)';
+  } else {
+    btn.className = 'add-btn';
+    btn.textContent = '+ Add protector';
+  }
+}
+
+function addProt() {
+  if (!protModel) return;
+  var types = ['clear','privacy','matte','camera'];
+  var selected = [];
+  for (var i = 0; i < types.length; i++) { if (protSelected[types[i]]) selected.push(types[i]); }
+  if (selected.length === 0) return;
+  var qty = qtys.prot;
+  var m = protModel;
+  for (var i = 0; i < selected.length; i++) {
+    entries.push({cat: 'Protectors', icon: '🛡️', model: m, detail: selected[i][0].toUpperCase() + selected[i].slice(1), qty: 'x' + qty});
+  }
+  clearProt();
+  var ptypes = ['clear','privacy','matte','camera'];
+  for (var i = 0; i < ptypes.length; i++) { protSelected[ptypes[i]] = false; document.getElementById('pt-' + ptypes[i]).classList.remove('on'); }
+  qtys.prot = 1; document.getElementById('protQty').textContent = '1';
+  renderEntries();
+  flash('Added ' + m + ' protector(s)');
+}
+
+// ── CHARGERS ─────────────────────────────────────────────────────────────────
+function updateChargerBtn() {
+  var count = 0;
+  for (var i = 0; i < CHARGERS.length; i++) { if (chargerChecked[i]) count++; }
+  var btn = document.getElementById('chargerAddBtn');
+  if (count > 0) { btn.className = 'add-btn on'; btn.textContent = '+ Add ' + count + ' charger type' + (count !== 1 ? 's' : ''); }
+  else { btn.className = 'add-btn'; btn.textContent = '+ Add chargers'; }
+}
+function addCharger() {
+  var items = [];
+  for (var i = 0; i < CHARGERS.length; i++) { if (chargerChecked[i]) items.push(CHARGERS[i]); }
+  if (items.length === 0) return;
+  entries.push({cat: 'Chargers', icon: '🔌', model: 'Chargers', detail: items.join(', '), qty: 'x' + qtys.charger + ' each'});
+  clearCbObj(chargerChecked, CHARGERS, 'charger');
+  updateChargerBtn();
+  renderEntries();
+  flash('Chargers added');
+}
+function selAll(prefix) {
+  var itemsMap = {charger: CHARGERS, airpods: AIRPODS, ipad: IPADS, holder: HOLDERS};
+  var chkMap   = {charger: chargerChecked, airpods: airpodsChecked, ipad: ipadChecked, holder: holderChecked};
+  var arr = itemsMap[prefix]; var obj = chkMap[prefix];
+  var allOn = true;
+  for (var i = 0; i < arr.length; i++) { if (!obj[i]) { allOn = false; break; } }
+  for (var i = 0; i < arr.length; i++) { obj[i] = !allOn; paintCb(prefix, i, !allOn); }
+  if (prefix === 'charger') updateChargerBtn();
+}
+
+// ── ACCESSORIES ──────────────────────────────────────────────────────────────
+function updateAccBtn(type) {
+  var itemsMap = {airpods: AIRPODS, ipad: IPADS, holder: HOLDERS};
+  var chkMap   = {airpods: airpodsChecked, ipad: ipadChecked, holder: holderChecked};
+  var arr = itemsMap[type]; var obj = chkMap[type];
+  var count = 0;
+  for (var i = 0; i < arr.length; i++) { if (obj[i]) count++; }
+  var btn = document.getElementById(type + 'AddBtn');
+  if (count > 0) { btn.className = 'add-btn on'; btn.textContent = '+ Add ' + count + ' item' + (count !== 1 ? 's' : ''); }
+  else { btn.className = 'add-btn'; btn.textContent = '+ Add'; }
+}
+function addAcc(type) {
+  var itemsMap = {airpods: AIRPODS, ipad: IPADS, holder: HOLDERS};
+  var chkMap   = {airpods: airpodsChecked, ipad: ipadChecked, holder: holderChecked};
+  var catMap   = {airpods: 'AirPods', ipad: 'iPad Cases', holder: 'Car Holders'};
+  var iconMap  = {airpods: '🎧', ipad: '📟', holder: '🚗'};
+  var arr = itemsMap[type]; var obj = chkMap[type];
+  var selected = [];
+  for (var i = 0; i < arr.length; i++) { if (obj[i]) selected.push(arr[i]); }
+  if (selected.length === 0) return;
+  entries.push({cat: catMap[type], icon: iconMap[type], model: catMap[type], detail: selected.join(', '), qty: 'x' + qtys[type] + ' each'});
+  clearCbObj(obj, arr, type);
+  updateAccBtn(type);
+  renderEntries();
+  flash(catMap[type] + ' added');
+}
+
+// ── QTY ──────────────────────────────────────────────────────────────────────
+function adj(type, delta) {
+  qtys[type] = Math.max(1, (qtys[type] || 1) + delta);
+  var ids = {prot:'protQty', charger:'chargerQty', airpods:'airpodsQty', ipad:'ipadQty', holder:'holderQty'};
+  document.getElementById(ids[type]).textContent = qtys[type];
+}
+
+// ── ENTRIES ───────────────────────────────────────────────────────────────────
+function removeEntry(idx) { entries.splice(idx, 1); renderEntries(); }
+
+function renderEntries() {
+  var list = document.getElementById('entryList');
+  var sec  = document.getElementById('entrySection');
+  var emp  = document.getElementById('emptyState');
+  list.innerHTML = '';
+  if (entries.length === 0) { sec.classList.add('hidden'); emp.classList.remove('hidden'); return; }
+  sec.classList.remove('hidden'); emp.classList.add('hidden');
+  document.getElementById('entryTitle').textContent = 'Order List — ' + entries.length + ' item' + (entries.length !== 1 ? 's' : '');
+  var cols = {Cases:'#3b82f6', Protectors:'#8b5cf6', Chargers:'#f59e0b', AirPods:'#06b6d4', 'iPad Cases':'#10b981', 'Car Holders':'#f97316'};
+  for (var i = 0; i < entries.length; i++) {
+    (function(e, idx) {
+      var col = cols[e.cat] || '#94a3b8';
+      var div = document.createElement('div'); div.className = 'entry-card';
+      div.innerHTML = '<div style="flex:1">'
+        + '<div class="entry-cat" style="color:' + col + '">' + e.icon + ' ' + e.cat + '</div>'
+        + '<div class="entry-model">' + e.model + ' <span style="font-size:11px;color:#64748b;font-weight:400;">' + e.qty + '</span></div>'
+        + '<div class="entry-detail">' + e.detail + '</div>'
+        + '</div><button class="rm-btn" onclick="removeEntry(' + idx + ')">&#215;</button>';
+      list.appendChild(div);
+    })(entries[i], i);
+  }
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+function flash(msg) {
+  var t = document.getElementById('toast'); t.textContent = msg; t.style.display = 'block';
+  setTimeout(function(){ t.style.display = 'none'; }, 2000);
+}
+
+// ── PDF ───────────────────────────────────────────────────────────────────────
+function exportPDF() {
+  var jsPDF = window.jspdf.jsPDF;
+  var doc = new jsPDF({unit:'pt', format:'a4'});
+  var store = document.getElementById('store').value || '___';
+  var emp   = document.getElementById('employee').value || '___';
+  var date  = new Date().toLocaleDateString();
+  var lm=40, rm=555, pw=rm-lm, y=0;
+
+  doc.setFillColor(37,99,235); doc.rect(0,0,595,52,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(20); doc.setFont('helvetica','bold'); doc.text('iFixandRepair',lm,28);
+  doc.setFontSize(11); doc.setFont('helvetica','normal'); doc.text('Accessories Order',lm,43);
+  doc.text(date,rm,28,{align:'right'});
+  y=65;
+
+  doc.setFillColor(241,245,249); doc.rect(lm,y,pw,24,'F');
+  doc.setTextColor(30,41,59); doc.setFontSize(10); doc.setFont('helvetica','bold');
+  doc.text('Store: '+store,lm+6,y+15);
+  doc.text('Employee: '+emp,lm+165,y+15);
+  doc.text('Date: '+date,lm+370,y+15);
+  y+=34;
+
+  // Group by cat
+  var cats = {}; var catOrder = [];
+  for (var i = 0; i < entries.length; i++) {
+    var key = entries[i].icon + ' ' + entries[i].cat;
+    if (!cats[key]) { cats[key] = []; catOrder.push(key); }
+    cats[key].push(entries[i]);
+  }
+
+  for (var ci = 0; ci < catOrder.length; ci++) {
+    var cat = catOrder[ci]; var items = cats[cat];
+    if (y > 780) { doc.addPage(); y = 40; }
+    doc.setFillColor(37,99,235); doc.rect(lm,y,pw,20,'F');
+    doc.setTextColor(255,255,255); doc.setFontSize(11); doc.setFont('helvetica','bold');
+    doc.text(cat,lm+6,y+13); y+=20;
+
+    doc.setFillColor(219,234,254); doc.rect(lm,y,pw,18,'F');
+    doc.setTextColor(30,58,138); doc.setFontSize(9); doc.setFont('helvetica','bold');
+    doc.text('Model',lm+6,y+12); doc.text('Details',lm+158,y+12); doc.text('Qty',rm-6,y+12,{align:'right'});
+    y+=18;
+
+    for (var ii = 0; ii < items.length; ii++) {
+      var e = items[ii];
+      var lines = doc.splitTextToSize(e.detail, pw-175);
+      var rowH  = Math.max(24, lines.length*13+10);
+      if (y+rowH > 800) { doc.addPage(); y=40; }
+      doc.setFillColor(ii%2===0?255:248, ii%2===0?255:250, ii%2===0?255:252);
+      doc.rect(lm,y,pw,rowH,'F');
+      doc.setTextColor(30,58,138); doc.setFontSize(10); doc.setFont('helvetica','bold');
+      doc.text(e.model,lm+6,y+15);
+      doc.setTextColor(51,65,85); doc.setFontSize(9); doc.setFont('helvetica','normal');
+      doc.text(lines,lm+158,y+15,{lineHeightFactor:1.4});
+      if (e.qty) { doc.setTextColor(100,116,139); doc.text(e.qty,rm-6,y+15,{align:'right'}); }
+      doc.setDrawColor(226,232,240); doc.setLineWidth(0.4); doc.rect(lm,y,pw,rowH,'S');
+      y+=rowH;
+    }
+    y+=10;
+  }
+
+  y+=4;
+  doc.setFillColor(239,246,255); doc.rect(lm,y,pw,24,'F');
+  doc.setDrawColor(191,219,254); doc.rect(lm,y,pw,24,'S');
+  doc.setTextColor(29,78,216); doc.setFontSize(10); doc.setFont('helvetica','bold');
+  doc.text('Total items: '+entries.length,lm+8,y+15); y+=32;
+  doc.setTextColor(148,163,184); doc.setFontSize(8); doc.setFont('helvetica','normal');
+  doc.text('iFixandRepair - Accessories Order - Generated '+date,lm,y);
+
+  doc.save(store.replace(/\s/g,'_')+'_Order_'+date.replace(/\//g,'-')+'.pdf');
+  flash('PDF downloaded!');
+}
+</script>
+</body>
+</html>
